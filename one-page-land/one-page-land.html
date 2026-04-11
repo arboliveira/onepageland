@@ -1,0 +1,28 @@
+<html lang="en"
+      xmlns:customary="https://customaryjs.github.io/schema"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="https://customaryjs.github.io/schema https://customaryjs.github.io/customary.xsd"
+>
+<div id="moody">
+	<customary:if condition="{{text}}">
+		<div id="page-text">{{text}}</div>
+	</customary:if>
+</div>
+
+<customary:if condition="{{options_inlined_visible_bool}}">
+	<one-page-options></one-page-options>
+</customary:if>
+
+<customary:classMap
+		target="#moody"
+		classInfo="{{classInfo}}"
+>
+</customary:classMap>
+
+<customary:styleMap
+		target="#moody"
+		styleInfo="{{styleInfo}}"
+>
+</customary:styleMap>
+
+</html>

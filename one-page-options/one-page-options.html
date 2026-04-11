@@ -1,0 +1,109 @@
+<html lang="en"
+      xmlns:customary="https://customaryjs.github.io/schema"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="https://customaryjs.github.io/schema https://customaryjs.github.io/customary.xsd"
+>
+<div id="options-backdrop">
+	<div id="options-panel">
+			<div id="options-title">One Page Land</div>
+
+			<form id="options-form">
+				<hr class="opt-divider" />
+
+				<div class="opt-row">
+					<label class="opt-name" for="input-text">Text</label>
+					<div class="opt-control"><textarea id="input-text" rows="3" data-customary-bind="opt_text"></textarea></div>
+					<div class="opt-param" id="param-text">{{param_text}}</div>
+					<customary:classMap target="#param-text" classInfo="{{param_text_classes}}"></customary:classMap>
+				</div>
+
+				<hr class="opt-divider" />
+
+				<div class="opt-row">
+					<label class="opt-name" for="input-title">Title</label>
+					<div class="opt-control"><input id="input-title" type="text" data-customary-bind="opt_title" placeholder="{{default_title}}" /></div>
+					<div class="opt-param" id="param-title">{{param_title}}</div>
+					<customary:classMap target="#param-title" classInfo="{{param_title_classes}}"></customary:classMap>
+				</div>
+
+				<div class="opt-row">
+					<label class="opt-name" for="input-divider">Divider</label>
+					<div class="opt-control"><input id="input-divider" type="checkbox" data-customary-bind="opt_divider" /></div>
+					<div class="opt-param" id="param-divider">{{param_divider}}</div>
+					<customary:classMap target="#param-divider" classInfo="{{param_divider_classes}}"></customary:classMap>
+				</div>
+
+				<hr class="opt-divider" />
+
+				<div class="opt-row">
+					<label class="opt-name" for="input-theme">Theme</label>
+					<div class="opt-control">
+						<select id="input-theme" data-customary-bind="opt_theme">
+							<option value=""></option>
+							<option value="dark">Dark</option>
+							<option value="light">Light</option>
+						</select>
+					</div>
+					<div class="opt-param" id="param-theme">{{param_theme}}</div>
+					<customary:classMap target="#param-theme" classInfo="{{param_theme_classes}}"></customary:classMap>
+				</div>
+
+				<div class="opt-row">
+					<label class="opt-name" for="input-fgcolor">Text color</label>
+					<div class="opt-control"><input id="input-fgcolor" type="text" data-customary-bind="opt_fgcolor" /></div>
+					<div class="opt-param" id="param-fgcolor">{{param_fgcolor}}</div>
+					<customary:classMap target="#param-fgcolor" classInfo="{{param_fgcolor_classes}}"></customary:classMap>
+				</div>
+
+				<div class="opt-row">
+					<label class="opt-name" for="input-bgcolor">Background color</label>
+					<div class="opt-control"><input id="input-bgcolor" type="text" data-customary-bind="opt_bgcolor" /></div>
+					<div class="opt-param" id="param-bgcolor">{{param_bgcolor}}</div>
+					<customary:classMap target="#param-bgcolor" classInfo="{{param_bgcolor_classes}}"></customary:classMap>
+				</div>
+
+				<hr class="opt-divider" />
+
+				<div class="opt-row">
+					<label class="opt-name" for="input-random">Random colors</label>
+					<div class="opt-control"><input id="input-random" type="checkbox" data-customary-bind="opt_random" /></div>
+					<div class="opt-param" id="param-random">{{param_random}}</div>
+					<customary:classMap target="#param-random" classInfo="{{param_random_classes}}"></customary:classMap>
+				</div>
+
+				<div class="opt-row">
+					<label class="opt-name" for="input-every">Every (ms)</label>
+					<div class="opt-control"><input id="input-every" type="text" data-customary-bind="opt_every" placeholder="{{default_every}}" /></div>
+					<div class="opt-param" id="param-every">{{param_every}}</div>
+					<customary:classMap target="#param-every" classInfo="{{param_every_classes}}"></customary:classMap>
+				</div>
+
+				<hr class="opt-divider" />
+
+				<customary:if condition="{{params_preview}}">
+					<a id="preview-btn" href="{{params_url}}">{{params_preview}}</a>
+					<button type="submit" hidden></button>
+				</customary:if>
+			</form>
+
+		<div id="tools-zone">
+			<div id="placement-controls">
+				<customary:if condition="{{is_inline}}">
+					<button id="move-to-window-btn" type="button" title="Move to window">↗</button>
+				</customary:if>
+				<customary:if condition="{{is_in_window}}">
+					<button id="move-inline-btn" type="button" title="Move inline">↙</button>
+				</customary:if>
+			</div>
+			<label id="live-view-label">
+				<input type="checkbox" data-customary-bind="live_editing_dont" />
+				Pause live editing
+			</label>
+			<div id="website-links">
+				<a href="https://arbo.nexus" target="_blank" title="arbo.nexus">🤓</a>
+				<a href="https://customary.js.org" target="_blank" title="Customary">👵</a>
+			</div>
+		</div>
+	</div>
+</div>
+</html>

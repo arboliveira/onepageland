@@ -1,0 +1,32 @@
+<div style="display: flex; align-items: center">
+    <div class="logo">
+        <span class="logo-caption">
+            Customary<br>Testing<br>
+        </span>
+        <span class="logo-emoji">
+            &#x1f469;&#x200d;&#x1f52c;&#x1f52c;
+        </span>
+        <p class="logo-tagline">
+            Science saves lives
+        </p>
+    </div>
+    <div style="flex-grow: 1; text-align: center">
+        <div class="title">~ {{title}} ~</div>
+        <div><button autofocus>run the tests</button></div>
+    </div>
+    <div class="mocha-stats-placeholder" style="align-self: flex-start">
+        <customary:if condition="{{mocha_stats_placeholder_hidden}}">
+            <customary:true></customary:true>
+            <customary:false>
+                <span>(mocha will show test stats here)</span>
+            </customary:false>
+        </customary:if>
+    </div>
+</div>
+<customary:if condition="{{mocha-json-serialize-reporter-output}}">
+    <div>
+        <pre id="mocha-json-serialize-reporter-output">
+            {{mocha-json-serialize-reporter-output}}
+        </pre>
+    </div>
+</customary:if>

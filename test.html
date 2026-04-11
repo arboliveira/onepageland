@@ -1,0 +1,47 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>
+
+    One Page Land tests
+
+</title></head><body>
+
+<template data-customary-name="tests-onepageland">
+    <tester-customary title="One Page Land"></tester-customary>
+</template>
+
+<tests-onepageland></tests-onepageland>
+
+<script type="importmap">
+    {
+        "imports": {
+            "chai": "./_dependencies/chai/chai.js",
+            "mocha": "./_dependencies/mocha/mocha.js",
+            "mocha.css": "./_dependencies/mocha/mocha.css",
+            "mocha-json-serialize-reporter": "./_dependencies/mocha-json-serialize-reporter/dist/mocha-json-serialize-reporter.umd.js",
+            "#customary-testing": "./_dependencies/customary-testing/index.js",
+            "#customary-testing/": "./_dependencies/customary-testing/",
+            "#customary": "./_dependencies/customary/customary.mjs"
+        }
+    }
+</script>
+
+<script type="module">
+    async function import_tests() {
+        await import('./one-page-land/one-page-land-test.js');
+    }
+
+    const mocha_css = import.meta.resolve('mocha.css');
+
+    import {TesterCustomary} from '#customary-testing/tester-customary/tester-customary.js';
+
+    /**
+     * @type {CustomaryDeclaration}
+     */
+    globalThis['customary:tests-onepageland'] = {hooks: {
+        requires: [TesterCustomary],
+        lifecycle: {
+            firstUpdated: el => TesterCustomary.attach(el, mocha_css, import_tests)
+        }
+    }};
+</script>
+
+</body></html>
