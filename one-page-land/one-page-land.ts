@@ -120,14 +120,19 @@ export class OnePageLandElement extends CustomaryElement {
 	}
 
 	on_willUpdate() {
-		const baseTitle = this.title || DEFAULT_TITLE;
-		document.title = (this.divider && this.divider !== '0')
-			? baseTitle.padEnd(40, '-')
-			: baseTitle;
+		const divider_requested = this.divider && this.divider !== '0';
+		const divider_title =
+			divider_requested
+				? (this.title || '').padEnd(40, '-')
+				: null;
+
+		document.title = divider_title || this.title || DEFAULT_TITLE;
+
 		this.classInfo = {
 			"dark": this.theme === "dark",
 			"light": this.theme === "light",
 		};
+
 		this.styleInfo = {
 			"background-color": this.bgcolor || this.randomBg,
 			...(this.fgcolor ? {"color": this.fgcolor} : {}),
