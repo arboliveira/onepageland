@@ -1,0 +1,14 @@
+<html lang="en"
+      xmlns:customary="https://customaryjs.github.io/schema"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="https://customaryjs.github.io/schema https://customaryjs.github.io/customary.xsd"
+>
+<div class="opt-row opt-row--per-line">
+	<label class="opt-name">Line <input class="line-size-row-n" type="number" min="1" data-customary-bind="line_number" /></label>
+	<div class="opt-control">
+		<input class="line-size-row-value" type="text" data-customary-bind="line_size" placeholder="{{placeholder}}" />
+		<button class="remove-line-size-btn" type="button" title="Remove">⊖</button>
+	</div>
+	<div class="{{param_class}}">{{param_text}}</div>
+</div>
+</html>

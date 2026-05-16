@@ -1,3 +1,4 @@
 export const DEFAULT_TITLE = 'One Page Land';
 export const DEFAULT_EVERY = 2000;
+export const DEFAULT_SIZE = 12;
 //# sourceMappingURL=defaults.js.map

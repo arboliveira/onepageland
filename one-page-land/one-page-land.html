@@ -3,9 +3,13 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="https://customaryjs.github.io/schema https://customaryjs.github.io/customary.xsd"
 >
-<div id="moody">
+<div id="hypostasis">
 	<customary:if condition="{{text}}">
-		<div id="page-text">{{text}}</div>
+		<div id="page-text">
+			<customary:for items="{{text_lines}}" value="line">
+				<span class="text-line" style="{[line.style]}">{[line.text]}</span>
+			</customary:for>
+		</div>
 	</customary:if>
 </div>
 
@@ -14,13 +18,13 @@
 </customary:if>
 
 <customary:classMap
-		target="#moody"
+		target="#hypostasis"
 		classInfo="{{classInfo}}"
 >
 </customary:classMap>
 
 <customary:styleMap
-		target="#moody"
+		target="#hypostasis"
 		styleInfo="{{styleInfo}}"
 >
 </customary:styleMap>

@@ -1,8 +1,13 @@
 import {Customary, CustomaryDeclaration, CustomaryElement} from "#customary";
 import {CustomaryHooks} from "#customary/CustomaryHooks.js";
-import {DEFAULT_TITLE, DEFAULT_EVERY} from "#onepageland/defaults/defaults.js";
+import {DEFAULT_EVERY, DEFAULT_SIZE, DEFAULT_TITLE} from "#onepageland/defaults/defaults.js";
+import {OnePageLineSizeElement} from "#onepageland/one-page-line-size/one-page-line-size.js";
 
 type Events = CustomaryHooks<OnePageOptionsElement>['events'];
+
+export interface OnePageOptionsOwnerCallback {
+	pullOptionsDialogBackInline(): void;
+}
 
 export class OnePageOptionsElement extends CustomaryElement {
 
@@ -14,6 +19,7 @@ export class OnePageOptionsElement extends CustomaryElement {
 	declare opt_random: string;
 	declare opt_every: string;
 	declare opt_divider: string;
+	declare opt_size: string;
 	declare live_editing_dont: string;
 	declare params_preview: string;
 	declare params_url: string;
@@ -33,16 +39,21 @@ export class OnePageOptionsElement extends CustomaryElement {
 	declare param_every_classes: Record<string, boolean>;
 	declare param_divider: string;
 	declare param_divider_classes: Record<string, boolean>;
+	declare param_size: string;
+	declare param_size_classes: Record<string, boolean>;
+	declare per_line_size_entries: Array<{n: number; value: string}>;
+	declare per_line_section_visible: boolean;
 	declare default_title: string;
 	declare default_every: string;
+	declare default_size: string;
 
 	declare _onKeydown: ((e: KeyboardEvent) => void) | undefined;
 
 	static readonly customary: CustomaryDeclaration<OnePageOptionsElement> = {
 		name: 'one-page-options',
 		config: {
-			attributes: ['opt_title', 'opt_text', 'opt_theme', 'opt_fgcolor', 'opt_bgcolor', 'opt_random', 'opt_every', 'opt_divider', 'live_editing_dont'],
-			state: ['param_title', 'param_text', 'param_theme', 'param_fgcolor', 'param_fgcolor_classes', 'param_bgcolor', 'param_bgcolor_classes', 'param_random', 'param_every', 'param_divider', 'param_title_classes', 'param_text_classes', 'param_theme_classes', 'param_random_classes', 'param_every_classes', 'param_divider_classes', 'default_title', 'default_every'],
+			attributes: ['opt_title', 'opt_text', 'opt_theme', 'opt_fgcolor', 'opt_bgcolor', 'opt_random', 'opt_every', 'opt_divider', 'opt_size', 'live_editing_dont'],
+			state: ['param_title', 'param_text', 'param_theme', 'param_fgcolor', 'param_fgcolor_classes', 'param_bgcolor', 'param_bgcolor_classes', 'param_random', 'param_every', 'param_divider', 'param_size', 'param_title_classes', 'param_text_classes', 'param_theme_classes', 'param_random_classes', 'param_every_classes', 'param_divider_classes', 'param_size_classes', 'per_line_size_entries', 'default_title', 'default_every', 'default_size'],
 			construct: {
 				shadowRootDont: true,
 			},
@@ -51,6 +62,7 @@ export class OnePageOptionsElement extends CustomaryElement {
 			},
 		},
 		hooks: {
+			requires: [OnePageLineSizeElement],
 			externalLoader: {import_meta: import.meta},
 			derive: {
 				'is_inline':    (_el: OnePageOptionsElement) => !window.opener,
@@ -131,6 +143,53 @@ export class OnePageOptionsElement extends CustomaryElement {
 					listener: (el, event) => { if (is_Alt_Insert(event)) (el as OnePageOptionsElement).defaultize_opt_every(); },
 				},
 				{
+					selector: '#input-size',
+					type: 'dblclick',
+					listener: (el) => (el as OnePageOptionsElement).defaultize_opt_size(),
+				},
+				{
+					selector: '#input-size',
+					type: 'keydown',
+					listener: (el, event) => { if (is_Alt_Insert(event)) (el as OnePageOptionsElement).defaultize_opt_size(); },
+				},
+				{
+					selector: '.add-line-size-btn',
+					type: 'click',
+					listener: (el) => {
+						const opts = el as OnePageOptionsElement;
+						const used = new Set(opts.per_line_size_entries.map(e => e.n));
+						let next = 1;
+						while (used.has(next)) next++;
+						opts.per_line_size_entries = [...opts.per_line_size_entries, {n: next, value: ''}];
+					},
+				},
+				{
+					selector: 'one-page-line-size',
+					type: 'line_size_change',
+					listener: (el, event) => {
+						const opts = el as OnePageOptionsElement;
+						const {idx, n, value} = (event as CustomEvent).detail as {idx: number; n: string; value: string};
+						if (!isFinite(idx)) return;
+						const parsed = parseInt(n, 10);
+						const clean_n = isFinite(parsed) && parsed > 0 ? parsed : 0;
+						const entry = opts.per_line_size_entries[idx];
+						if (!entry) return;
+						if (entry.n === clean_n && entry.value === value) return;
+						opts.per_line_size_entries = opts.per_line_size_entries.map((e, i) =>
+							i === idx ? {n: clean_n, value} : e);
+					},
+				},
+				{
+					selector: 'one-page-line-size',
+					type: 'line_size_remove',
+					listener: (el, event) => {
+						const opts = el as OnePageOptionsElement;
+						const {idx} = (event as CustomEvent).detail as {idx: number};
+						if (!isFinite(idx)) return;
+						opts.per_line_size_entries = opts.per_line_size_entries.filter((_, i) => i !== idx);
+					},
+				},
+				{
 					selector: '#move-to-window-btn',
 					type: 'click',
 					listener: (el) => {
@@ -141,8 +200,10 @@ export class OnePageOptionsElement extends CustomaryElement {
 					selector: '#move-inline-btn',
 					type: 'click',
 					listener: () => {
-						const land = (window.opener as Window).document.querySelector('one-page-land') as HTMLElement & {moveInline: () => void};
-						land?.moveInline();
+						const elOnePageLand =
+							(window.opener as Window).document
+								.querySelector('one-page-land') as unknown as OnePageOptionsOwnerCallback;
+						elOnePageLand?.pullOptionsDialogBackInline();
 						window.close();
 					},
 				},
@@ -153,6 +214,7 @@ export class OnePageOptionsElement extends CustomaryElement {
 	on_connected() {
 		this.default_title = DEFAULT_TITLE;
 		this.default_every = String(DEFAULT_EVERY);
+		this.default_size = String(DEFAULT_SIZE);
 
 		const params = new URLSearchParams(window.location.search);
 		this.opt_title = params.get("title") ?? '';
@@ -163,6 +225,15 @@ export class OnePageOptionsElement extends CustomaryElement {
 		this.opt_random = params.get("random") ? 'true' : 'false';
 		this.opt_every = params.get("every") ?? '';
 		this.opt_divider = params.get("divider") ? 'true' : 'false';
+		this.opt_size = params.get("size") ?? '';
+
+		const entries: Array<{n: number; value: string}> = [];
+		for (const [key, value] of params) {
+			const m = key.match(/^size_(\d+)$/);
+			if (m && value) entries.push({n: parseInt(m[1], 10), value});
+		}
+		entries.sort((a, b) => a.n - b.n);
+		this.per_line_size_entries = entries;
 
 		document.addEventListener('keydown', this._onKeydown = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') this.dismiss();
@@ -185,6 +256,7 @@ export class OnePageOptionsElement extends CustomaryElement {
 			random:  this.opt_random === 'true' ? '1' : null,
 			every:   this.opt_random && this.opt_every ? this.opt_every : null,
 			divider: this.opt_divider === 'true' ? '1' : null,
+			size:    this.opt_size || null,
 		};
 
 		const paramStr = (key: string, v: string | null) => `&${key}=${encodeURIComponent(v ?? '')}`;
@@ -206,6 +278,8 @@ export class OnePageOptionsElement extends CustomaryElement {
 		this.param_every_classes  = paramCls(resolved.every);
 		this.param_divider      = paramStr('divider',  resolved.divider);
 		this.param_divider_classes = paramCls(resolved.divider);
+		this.param_size         = paramStr('size',     resolved.size);
+		this.param_size_classes = paramCls(resolved.size);
 
 		const parts: string[] = [];
 		const newParams = new URLSearchParams(window.location.search);
@@ -217,6 +291,22 @@ export class OnePageOptionsElement extends CustomaryElement {
 				newParams.delete(key);
 			}
 		}
+
+		for (const key of Array.from(newParams.keys())) {
+			if (/^size_\d+$/.test(key)) newParams.delete(key);
+		}
+		for (const entry of this.per_line_size_entries ?? []) {
+			const num = parseFloat(entry.value);
+			const valid = entry.n > 0 && isFinite(num) && num > 0;
+			if (!valid) continue;
+			const key = `size_${entry.n}`;
+			const valStr = String(num);
+			parts.push(`${key}=${encodeURIComponent(valStr)}`);
+			newParams.set(key, valStr);
+		}
+		const lineCount = (this.opt_text ?? '').split('\n').length;
+		this.per_line_section_visible = lineCount >= 2;
+
 		this.params_preview = parts.length ? '?' + parts.join('&') : '';
 		const query = newParams.toString();
 		const targetWindow = (window.opener as Window | null) ?? window;
@@ -235,6 +325,10 @@ export class OnePageOptionsElement extends CustomaryElement {
 
 	defaultize_opt_every() {
 		if (!this.opt_every) this.opt_every = String(DEFAULT_EVERY);
+	}
+
+	defaultize_opt_size() {
+		if (!this.opt_size) this.opt_size = String(DEFAULT_SIZE);
 	}
 
 	dismiss() {

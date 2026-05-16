@@ -62,6 +62,31 @@
 					<customary:classMap target="#param-bgcolor" classInfo="{{param_bgcolor_classes}}"></customary:classMap>
 				</div>
 
+				<div class="opt-row">
+					<label class="opt-name" for="input-size">Size (dvw)</label>
+					<div class="opt-control"><input id="input-size" type="text" data-customary-bind="opt_size" placeholder="{{default_size}}" /></div>
+					<div class="opt-param" id="param-size">{{param_size}}</div>
+					<customary:classMap target="#param-size" classInfo="{{param_size_classes}}"></customary:classMap>
+				</div>
+
+				<customary:if condition="{{per_line_section_visible}}">
+					<customary:for items="{{per_line_size_entries}}" value="entry" index="idx">
+						<one-page-line-size
+								idx="{[idx]}"
+								line_number="{[entry.n]}"
+								line_size="{[entry.value]}"
+								placeholder="{{opt_size}}"
+						></one-page-line-size>
+					</customary:for>
+					<div class="opt-row opt-row--per-line opt-row--add">
+						<div></div>
+						<div class="opt-control">
+							<button class="add-line-size-btn" type="button" title="Add line size">⊕</button>
+						</div>
+						<div></div>
+					</div>
+				</customary:if>
+
 				<hr class="opt-divider" />
 
 				<div class="opt-row">

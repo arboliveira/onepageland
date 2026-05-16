@@ -5,8 +5,8 @@ export class OnePageLandElement extends CustomaryElement {
     static customary = {
         name: 'one-page-land',
         config: {
-            attributes: ['title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor', 'options_in_window_always', 'options_inlined_visible'],
-            state: ['randomBg', 'options_placement'],
+            attributes: ['title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor', 'size', 'options_in_window_always'],
+            state: ['randomBg', 'options_placement', 'options_inlined_visible', 'per_line_sizes'],
             construct: {
                 shadowRootDont: true,
             },
@@ -27,7 +27,7 @@ export class OnePageLandElement extends CustomaryElement {
             },
             events: [
                 {
-                    selector: '#moody',
+                    selector: '#hypostasis',
                     listener: (el) => {
                         const land = el;
                         if (land.options_inlined_visible === 'true') {
@@ -41,9 +41,7 @@ export class OnePageLandElement extends CustomaryElement {
                 {
                     selector: 'one-page-options',
                     type: 'close_me_please',
-                    listener: (el) => {
-                        el.options_inlined_visible = 'false';
-                    },
+                    listener: (el) => el.options_inlined_visible = 'false',
                 },
                 {
                     selector: 'one-page-options',
@@ -64,7 +62,7 @@ export class OnePageLandElement extends CustomaryElement {
         if (this.isVanillaUrl()) {
             this.openOptions();
         }
-        document.addEventListener('keydown', this._onKeydown = (e) => {
+        document.addEventListener('keydown', this._onKeydownEventListener = (e) => {
             if (e.key === 'Enter')
                 this.openOptions();
         });
@@ -72,25 +70,42 @@ export class OnePageLandElement extends CustomaryElement {
         const everyParam = new URLSearchParams(window.location.search).get("every");
         const everyMs = everyParam === "" ? DEFAULT_EVERY : (parseInt(everyParam) || 0);
         if (everyMs > 0) {
-            this._interval = setInterval(() => this.randomizeColors(), everyMs);
+            this._intervalTimeout = setInterval(() => this.randomizeColors(), everyMs);
         }
     }
     syncFromUrl() {
         const params = new URLSearchParams(window.location.search);
-        this.title = params.get("title") ?? '';
-        this.text = params.get("text") ?? '';
-        this.theme = params.get("theme") ?? '';
-        this.random = params.get("random") ?? '';
-        this.every = params.get("every") ?? '';
-        this.divider = params.get("divider") ?? '';
-        this.fgcolor = params.get("fgcolor") ?? '';
-        this.bgcolor = params.get("bgcolor") ?? '';
+        const title = params.get("title");
+        if (title !== null) {
+            this.title = title;
+        }
+        else {
+            this.removeAttribute('title');
+        }
+        this.text = params.get("text") ?? undefined;
+        this.theme = params.get("theme") ?? undefined;
+        this.random = params.get("random") ?? undefined;
+        this.every = params.get("every") ?? undefined;
+        this.divider = params.get("divider") ?? undefined;
+        this.fgcolor = params.get("fgcolor") ?? undefined;
+        this.bgcolor = params.get("bgcolor") ?? undefined;
+        this.size = params.get("size") ?? undefined;
+        const perLine = {};
+        for (const [key, value] of params) {
+            const match = key.match(/^size_(\d+)$/);
+            if (!match || !value)
+                continue;
+            const n = parseFloat(value);
+            if (isFinite(n) && n > 0)
+                perLine[parseInt(match[1], 10)] = `${n}dvw`;
+        }
+        this.per_line_sizes = perLine;
     }
     on_disconnected() {
-        if (this._interval)
-            clearInterval(this._interval);
-        if (this._onKeydown)
-            document.removeEventListener('keydown', this._onKeydown);
+        if (this._intervalTimeout)
+            clearInterval(this._intervalTimeout);
+        if (this._onKeydownEventListener)
+            document.removeEventListener('keydown', this._onKeydownEventListener);
     }
     on_willUpdate() {
         const divider_requested = this.divider && this.divider !== '0';
@@ -102,10 +117,22 @@ export class OnePageLandElement extends CustomaryElement {
             "dark": this.theme === "dark",
             "light": this.theme === "light",
         };
+        const sizeNum = parseFloat(this.size ?? '');
+        const sizeCss = isFinite(sizeNum) && sizeNum > 0 ? `${sizeNum}dvw` : '';
         this.styleInfo = {
             "background-color": this.bgcolor || this.randomBg,
             ...(this.fgcolor ? { "color": this.fgcolor } : {}),
+            ...(sizeCss ? { "--page-text-font-size": sizeCss } : {}),
         };
+        const lines = (this.text ?? '').split('\n');
+        const perLine = this.per_line_sizes ?? {};
+        this.text_lines = lines.map((lineText, i) => {
+            const override = perLine[i + 1];
+            return {
+                text: lineText,
+                style: override ? `font-size: ${override}` : '',
+            };
+        });
     }
     openOptions() {
         if (this.options_placement === 'window') {
@@ -115,7 +142,7 @@ export class OnePageLandElement extends CustomaryElement {
             this.options_inlined_visible = 'true';
         }
     }
-    moveInline() {
+    pullOptionsDialogBackInline() {
         this.options_placement = 'inline';
         this.options_inlined_visible = 'true';
     }
@@ -132,7 +159,14 @@ export class OnePageLandElement extends CustomaryElement {
     }
     isVanillaUrl() {
         const params = new URLSearchParams(window.location.search);
-        return !['title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor'].some(key => params.has(key));
+        const known = ['title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor', 'size'];
+        if (known.some(key => params.has(key)))
+            return false;
+        for (const key of params.keys()) {
+            if (/^size_\d+$/.test(key))
+                return false;
+        }
+        return true;
     }
 }
 function randomColor() {

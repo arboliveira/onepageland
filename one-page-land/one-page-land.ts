@@ -1,35 +1,60 @@
 import {Customary, CustomaryDeclaration, CustomaryElement} from "#customary";
 import {CustomaryHooks} from "#customary/CustomaryHooks.js";
-import {OnePageOptionsElement} from "#onepageland/one-page-options/one-page-options.js";
+import {OnePageOptionsElement, OnePageOptionsOwnerCallback} from "#onepageland/one-page-options/one-page-options.js";
 import {DEFAULT_TITLE, DEFAULT_EVERY} from "#onepageland/defaults/defaults.js";
 
 type Events = CustomaryHooks<OnePageLandElement>['events'];
 
-export class OnePageLandElement extends CustomaryElement {
+export class OnePageLandElement extends CustomaryElement implements OnePageOptionsOwnerCallback {
 
-	declare title: string;
-	declare text: string;
-	declare theme: string;
-	declare random: string;
-	declare every: string;
-	declare divider: string;
-	declare fgcolor: string;
-	declare bgcolor: string;
+	/*
+	attributes: from URL params
+	(undefined to suppress attribute in browser inspector when param absent, for cleaner debugging)
+	 */
+	declare text?: string;
+	declare theme?: string;
+	declare random?: string;
+	declare every?: string;
+	declare divider?: string;
+	declare fgcolor?: string;
+	declare bgcolor?: string;
+	declare size?: string;
+
+	/*
+	attributes: HTML only
+	 */
 	declare options_in_window_always: string;
-	declare options_inlined_visible: string;
+
+	/*
+	state
+	 */
 	declare options_placement: string;
+	declare options_inlined_visible: string;
 	declare randomBg: string;
+
+	/**
+	 * computed pre-rendering
+	 */
 	declare classInfo: Record<string, boolean>;
 	declare styleInfo: Record<string, string>;
+	declare text_lines: Array<{text: string, style: string}>;
 
-	declare _interval: ReturnType<typeof setInterval> | undefined;
-	declare _onKeydown: ((e: KeyboardEvent) => void) | undefined;
+	/**
+	 * URL-only: per-line font size overrides, keyed by 1-based line number
+	 */
+	declare per_line_sizes: Record<number, string>;
+
+	/**
+	 * behavior
+	 */
+	declare _intervalTimeout: ReturnType<typeof setInterval> | undefined;
+	declare _onKeydownEventListener: ((e: KeyboardEvent) => void) | undefined;
 
 	static readonly customary: CustomaryDeclaration<OnePageLandElement> = {
 		name: 'one-page-land',
 		config: {
-			attributes: ['title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor', 'options_in_window_always', 'options_inlined_visible'],
-			state: ['randomBg', 'options_placement'],
+			attributes: ['title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor', 'size', 'options_in_window_always'],
+			state: ['randomBg', 'options_placement', 'options_inlined_visible', 'per_line_sizes'],
 			construct: {
 				shadowRootDont: true,
 			},
@@ -50,7 +75,7 @@ export class OnePageLandElement extends CustomaryElement {
 			},
 			events: [
 				{
-					selector: '#moody',
+					selector: '#hypostasis',
 					listener: (el) => {
 						const land = el as OnePageLandElement;
 						if (land.options_inlined_visible === 'true') {
@@ -63,9 +88,7 @@ export class OnePageLandElement extends CustomaryElement {
 				{
 					selector: 'one-page-options',
 					type: 'close_me_please',
-					listener: (el) => {
-						(el as OnePageLandElement).options_inlined_visible = 'false';
-					},
+					listener: (el: OnePageLandElement) => el.options_inlined_visible = 'false',
 				},
 				{
 					selector: 'one-page-options',
@@ -89,7 +112,7 @@ export class OnePageLandElement extends CustomaryElement {
 			this.openOptions();
 		}
 
-		document.addEventListener('keydown', this._onKeydown = (e: KeyboardEvent) => {
+		document.addEventListener('keydown', this._onKeydownEventListener = (e: KeyboardEvent) => {
 			if (e.key === 'Enter') this.openOptions();
 		});
 
@@ -98,25 +121,41 @@ export class OnePageLandElement extends CustomaryElement {
 		const everyParam = new URLSearchParams(window.location.search).get("every");
 		const everyMs = everyParam === "" ? DEFAULT_EVERY : (parseInt(everyParam!) || 0);
 		if (everyMs > 0) {
-			this._interval = setInterval(() => this.randomizeColors(), everyMs);
+			this._intervalTimeout = setInterval(() => this.randomizeColors(), everyMs);
 		}
 	}
 
 	syncFromUrl() {
 		const params = new URLSearchParams(window.location.search);
-		this.title = params.get("title") ?? '';
-		this.text = params.get("text") ?? '';
-		this.theme = params.get("theme") ?? '';
-		this.random = params.get("random") ?? '';
-		this.every = params.get("every") ?? '';
-		this.divider = params.get("divider") ?? '';
-		this.fgcolor = params.get("fgcolor") ?? '';
-		this.bgcolor = params.get("bgcolor") ?? '';
+
+		const title: string | null = params.get("title");
+		if (title !== null) {
+			this.title = title;
+		} else {
+			this.removeAttribute('title');
+		}
+		this.text = params.get("text") ?? undefined;
+		this.theme = params.get("theme") ?? undefined;
+		this.random = params.get("random") ?? undefined;
+		this.every = params.get("every") ?? undefined;
+		this.divider = params.get("divider") ?? undefined;
+		this.fgcolor = params.get("fgcolor") ?? undefined;
+		this.bgcolor = params.get("bgcolor") ?? undefined;
+		this.size = params.get("size") ?? undefined;
+
+		const perLine: Record<number, string> = {};
+		for (const [key, value] of params) {
+			const match = key.match(/^size_(\d+)$/);
+			if (!match || !value) continue;
+			const n = parseFloat(value);
+			if (isFinite(n) && n > 0) perLine[parseInt(match[1], 10)] = `${n}dvw`;
+		}
+		this.per_line_sizes = perLine;
 	}
 
 	on_disconnected() {
-		if (this._interval) clearInterval(this._interval);
-		if (this._onKeydown) document.removeEventListener('keydown', this._onKeydown);
+		if (this._intervalTimeout) clearInterval(this._intervalTimeout);
+		if (this._onKeydownEventListener) document.removeEventListener('keydown', this._onKeydownEventListener);
 	}
 
 	on_willUpdate() {
@@ -133,10 +172,24 @@ export class OnePageLandElement extends CustomaryElement {
 			"light": this.theme === "light",
 		};
 
+		const sizeNum = parseFloat(this.size ?? '');
+		const sizeCss = isFinite(sizeNum) && sizeNum > 0 ? `${sizeNum}dvw` : '';
+
 		this.styleInfo = {
 			"background-color": this.bgcolor || this.randomBg,
 			...(this.fgcolor ? {"color": this.fgcolor} : {}),
+			...(sizeCss ? {"--page-text-font-size": sizeCss} : {}),
 		};
+
+		const lines = (this.text ?? '').split('\n');
+		const perLine = this.per_line_sizes ?? {};
+		this.text_lines = lines.map((lineText, i) => {
+			const override = perLine[i + 1];
+			return {
+				text: lineText,
+				style: override ? `font-size: ${override}` : '',
+			};
+		});
 	}
 
 	openOptions() {
@@ -147,7 +200,7 @@ export class OnePageLandElement extends CustomaryElement {
 		}
 	}
 
-	moveInline() {
+	pullOptionsDialogBackInline() {
 		this.options_placement = 'inline';
 		this.options_inlined_visible = 'true';
 	}
@@ -167,7 +220,12 @@ export class OnePageLandElement extends CustomaryElement {
 
 	isVanillaUrl() {
 		const params = new URLSearchParams(window.location.search);
-		return !['title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor'].some(key => params.has(key));
+		const known = ['title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor', 'size'];
+		if (known.some(key => params.has(key))) return false;
+		for (const key of params.keys()) {
+			if (/^size_\d+$/.test(key)) return false;
+		}
+		return true;
 	}
 }
 
