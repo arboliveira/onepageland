@@ -1,0 +1,184 @@
+:host {
+	display: block;
+	--frame: #d7d3c8;
+	--frame-bar: #ece8de;
+	--ink: #2b2a26;
+	--muted: #6f6b60;
+}
+
+#gallery {
+	min-height: 100dvh;
+	box-sizing: border-box;
+	padding: 3dvw 4dvw 6dvw;
+	color: var(--ink);
+	font-family: "Averia Serif Libre", cursive;
+}
+
+#gallery-header {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-bottom: 2.5dvw;
+}
+
+#gallery-header h1 {
+	margin: 0;
+	font-size: clamp(1.6rem, 4dvw, 3rem);
+	font-weight: 700;
+}
+
+.view-mode-btn {
+	font-family: inherit;
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--ink);
+	background: var(--frame-bar);
+	border: 1px solid var(--frame);
+	border-radius: 999px;
+	padding: 0.5em 1.25em;
+	cursor: pointer;
+	transition: background 0.15s ease, transform 0.05s ease;
+}
+.view-mode-btn:hover { background: #fff; }
+.view-mode-btn:active { transform: translateY(1px); }
+
+#grid {
+	display: grid;
+	gap: clamp(1.5rem, 4dvw, 4rem);
+}
+#grid.hi-def    { grid-template-columns: 1fr; }
+#grid.miniature { grid-template-columns: 1fr 1fr; }
+
+.preview {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+/*
+Hi-Def previews are as wide as the page allows, so their screens would stand
+taller than the room under the header. Capped, the whole preview stays in view.
+*/
+#grid.hi-def .preview {
+	max-width: var(--preview-max-width, none);
+	margin-inline: auto;
+	width: 100%;
+}
+
+/* the stylized mini-screen: window chrome around a live, scaled-down render */
+.window {
+	border: 1px solid var(--frame);
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.title-bar {
+	display: flex;
+	align-items: center;
+	gap: 0.6em;
+	height: 2.2em;
+	padding: 0 0.9em;
+	background: linear-gradient(var(--frame-bar), var(--frame));
+	border-bottom: 1px solid var(--frame);
+}
+
+.dots {
+	display: inline-flex;
+	gap: 0.4em;
+	flex: none;
+}
+.dots i {
+	width: 0.72em;
+	height: 0.72em;
+	border-radius: 50%;
+	background: #c9c4b8;
+}
+.dots i:nth-child(1) { background: #ff5f57; }
+.dots i:nth-child(2) { background: #febc2e; }
+.dots i:nth-child(3) { background: #28c840; }
+
+.title {
+	flex: 1;
+	min-width: 0;
+	text-align: center;
+	font-size: 0.95em;
+	color: var(--muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	/* keep the row centered despite the dots on the left */
+	margin-right: calc(3 * 0.72em + 2 * 0.4em);
+}
+
+/* the screen: an honest miniature, its shape mirroring the real viewport */
+.viewport {
+	position: relative;
+	width: 100%;
+	aspect-ratio: var(--viewport-aspect, 1.6);
+	overflow: hidden;
+}
+
+/*
+a full-viewport canvas holding the live instance, shrunk to fit the screen.
+
+Shrunk with `zoom`, not `transform: scale()`. A transform hands the subtree to
+the compositor as one rasterized layer, and when that raster is remade at a new
+scale — resizing the window is enough — colour emoji come back cut off flat,
+their ink clipped to the line box by `#page-text`'s `overflow: hidden`: no
+crown on the hat, no funnels on the ship. `zoom` scales the layout itself, so
+there is no rescaled raster to cut and the glyphs paint whole, as they do on
+the standalone page. `100vw`/`100vh` still resolve against the real viewport
+under `zoom`, which is what keeps the miniature honest.
+*/
+.canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	zoom: var(--preview-scale, 0.25);
+}
+.canvas one-page-land { display: block; }
+
+figcaption {
+	/* room below for the button's raised shadow */
+	padding: 1.1rem 0.2rem 0.6rem;
+}
+
+/* the params strip is the way in: the Options Screen's big green button, per preview */
+.params-btn {
+	display: block;
+	padding: 10px 14px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	background-color: #3a3;
+	border-radius: 6px;
+	color: white;
+	font-size: 1em;
+	font-family: monospace;
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+	border: none;
+	box-shadow: 0 6px 0 #1a6a1a, 0 8px 6px rgba(0,0,0,0.3);
+	transform: translateY(-2px);
+	transition: box-shadow 0.1s, transform 0.1s, background-color 0.1s;
+}
+
+.params-btn:hover {
+	background-color: #4b4;
+}
+
+.params-btn:active {
+	box-shadow: 0 2px 0 #1a6a1a, 0 3px 4px rgba(0,0,0,0.2);
+	transform: translateY(2px);
+}
+
+@media (max-width: 640px) {
+	#grid.miniature { grid-template-columns: 1fr; }
+}

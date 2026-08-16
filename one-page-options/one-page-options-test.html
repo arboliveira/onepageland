@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><link rel="icon" href="../favicon.svg" /><title>
+
+	One Page Options, with nobody to navigate but itself
+
+</title>
+
+<script>
+	/*
+	 * Disowning the opener is the whole reason this fixture exists.
+	 *
+	 * `CT.open` is `window.open`, so the Options Screen's opener would be the Mocha
+	 * runner page. Every Enter path ends at `window.opener ?? window`, and live editing
+	 * calls `history.replaceState` on that same window while you type — aimed at the
+	 * runner, the suite would steer itself off the road mid-run.
+	 *
+	 * With no opener, both land on this page instead: an apply becomes a navigation of
+	 * this window, which a test can watch for without anything else moving.
+	 *
+	 * Placement itself is no longer read from here — that is the `is_in_window`
+	 * attribute now, and this fixture leaves it off, which is what inline means. What
+	 * still hangs on the opener is where an apply and live editing point.
+	 *
+	 * Classic script, and before the module below: live editing calls `replaceState` on
+	 * `window.opener ?? window` from the element's very first update, so this has to be
+	 * true by the time the element upgrades.
+	 */
+	window.opener = null;
+</script>
+
+	<style>
+		html, body { margin: 0; height: 100%; }
+	</style>
+</head>
+
+<body>
+	<!--
+		Deliberately no `close_me_please` listener, unlike `index.html`: that page closes
+		its own window, and a fixture that closes itself takes the assertions with it.
+	-->
+	<one-page-options></one-page-options>
+
+<script type="importmap">{"imports": {
+	"#onepageland/": "../",
+	"#customary": "../_dependencies/customary/customary.mjs"
+}}</script>
+<script type="module">
+	import "./one-page-options.js";
+</script>
+
+</body>
+</html>

@@ -13,6 +13,7 @@
 <script type="importmap">
     {
         "imports": {
+            "#onepageland/": "./",
             "chai": "./_dependencies/chai/index.js",
             "mocha": "./_dependencies/mocha/mocha.js",
             "mocha.css": "./_dependencies/mocha/mocha.css",
@@ -26,7 +27,13 @@
 
 <script type="module">
     async function import_tests() {
+        await import('./home/home-page-test.js');
         await import('./one-page-land/one-page-land-test.js');
+        await import('./one-page-land/one-page-land-class-and-style-test.js');
+        await import('./one-page-land/one-page-land-two-test.js');
+        await import('./one-page-options/one-page-options-test.js');
+        await import('./gallery/gallery-examples-test.js');
+        await import('./gallery/gallery-page-test.js');
     }
 
     const mocha_css = import.meta.resolve('mocha.css');

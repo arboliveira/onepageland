@@ -1,11 +1,20 @@
 import {Customary, CustomaryDeclaration, CustomaryElement} from "#customary";
 import {CustomaryHooks} from "#customary/CustomaryHooks.js";
-import {OnePageOptionsElement, OnePageOptionsOwnerCallback} from "#onepageland/one-page-options/one-page-options.js";
+import {PropertyValues} from "#customary/lifecycle/changedProperties/PropertyValues.js";
 import {DEFAULT_TITLE, DEFAULT_EVERY} from "#onepageland/defaults/defaults.js";
 
 type Events = CustomaryHooks<OnePageLandElement>['events'];
 
-export class OnePageLandElement extends CustomaryElement implements OnePageOptionsOwnerCallback {
+export class OnePageLandElement extends CustomaryElement {
+
+	/**
+	 * attribute: a URL query string, the single source of truth for every attribute below
+	 * (see the `params_string` change hook)
+	 *
+	 * Nothing here reads `window` or `document`: whoever owns the page hands us this string,
+	 * so any number of `one-page-land` elements can live side by side in one document.
+	 */
+	declare params_string?: string;
 
 	/*
 	attributes: from URL params
@@ -19,114 +28,82 @@ export class OnePageLandElement extends CustomaryElement implements OnePageOptio
 	declare fgcolor?: string;
 	declare bgcolor?: string;
 	declare size?: string;
-
-	/*
-	attributes: HTML only
-	 */
-	declare options_in_window_always: string;
+	/* URL params `style` and `class`: internal names differ because both are global HTML attributes */
+	declare page_style?: string;
+	declare line_class?: string;
 
 	/*
 	state
 	 */
-	declare options_placement: string;
-	declare options_inlined_visible: string;
 	declare randomBg: string;
 
 	/**
 	 * computed pre-rendering
 	 */
+	declare derived_title: string;
 	declare classInfo: Record<string, boolean>;
 	declare styleInfo: Record<string, string>;
-	declare text_lines: Array<{text: string, style: string}>;
+	declare text_lines: Array<{text: string, styleInfo: Record<string, string>, classInfo: Record<string, boolean>}>;
 
 	/**
-	 * URL-only: per-line font size overrides, keyed by 1-based line number
+	 * URL-only: per-line option overrides, keyed by 1-based line number
 	 */
-	declare per_line_sizes: Record<number, string>;
+	declare per_line_overrides: Record<number, {size?: string; fgcolor?: string; classes?: string[]}>;
 
 	/**
 	 * behavior
 	 */
 	declare _intervalTimeout: ReturnType<typeof setInterval> | undefined;
-	declare _onKeydownEventListener: ((e: KeyboardEvent) => void) | undefined;
+	declare _pageStyleSheet: CSSStyleSheet | null | undefined;
 
 	static readonly customary: CustomaryDeclaration<OnePageLandElement> = {
 		name: 'one-page-land',
 		config: {
-			attributes: ['title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor', 'size', 'options_in_window_always'],
-			state: ['randomBg', 'options_placement', 'options_inlined_visible', 'per_line_sizes'],
+			attributes: ['params_string', 'title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor', 'size', 'page_style', 'line_class'],
+			state: ['randomBg', 'per_line_overrides'],
 			construct: {
-				shadowRootDont: true,
+				shadowRootDont: false,
 			},
 			define: {
 				fontLocation: 'https://fonts.googleapis.com/css2?family=Averia+Serif+Libre:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap'
 			},
 		},
 		hooks: {
-			requires: [OnePageOptionsElement],
 			externalLoader: {import_meta: import.meta},
 			lifecycle: {
-				connected: el => el.on_connected(),
 				disconnected: el => el.on_disconnected(),
-				willUpdate: el => el.on_willUpdate(),
+				updated: (el, changedProperties) => el.on_updated(changedProperties),
 			},
+			changes: {
+				/* the one and only entry point into the URL params */
+				'params_string': el => el.syncFromUrl(),
+				/* both follow in this same update, reading what `syncFromUrl` just landed */
+				'random': el => el.randomizeColors(),
+				'every': el => el.restart_randomizing(),
+			},
+			/* derive runs after changes: these see the attributes the params just landed */
 			derive: {
-				'options_inlined_visible_bool': (el: OnePageLandElement) => el.options_inlined_visible === 'true',
+				'derived_title': el => el.derive_derived_title(),
+				'classInfo': el => el.derive_classInfo(),
+				'styleInfo': el => el.derive_styleInfo(),
+				'text_lines': el => el.derive_text_lines(),
 			},
 			events: [
 				{
+					/* announce the click, leaving to the host page what to make of it */
 					selector: '#hypostasis',
-					listener: (el) => {
-						const land = el as OnePageLandElement;
-						if (land.options_inlined_visible === 'true') {
-							land.options_inlined_visible = 'false';
-						} else {
-							land.openOptions();
-						}
-					},
-				},
-				{
-					selector: 'one-page-options',
-					type: 'close_me_please',
-					listener: (el: OnePageLandElement) => el.options_inlined_visible = 'false',
-				},
-				{
-					selector: 'one-page-options',
-					type: 'move_to_window',
-					listener: (el) => {
-						const land = el as OnePageLandElement;
-						land.options_placement = 'window';
-						land.options_inlined_visible = 'false';
-						land.openOptionsWindow();
-					},
+					listener: (el) => el.dispatchEvent(
+						new CustomEvent('page_clicked', {bubbles: true, composed: true})),
 				},
 			] as Events,
 		}
 	}
 
-	on_connected() {
-		this.syncFromUrl();
-		this.options_placement = this.options_in_window_always === 'true' ? 'window' : 'inline';
-
-		if (this.isVanillaUrl()) {
-			this.openOptions();
-		}
-
-		document.addEventListener('keydown', this._onKeydownEventListener = (e: KeyboardEvent) => {
-			if (e.key === 'Enter') this.openOptions();
-		});
-
-		this.randomizeColors();
-
-		const everyParam = new URLSearchParams(window.location.search).get("every");
-		const everyMs = everyParam === "" ? DEFAULT_EVERY : (parseInt(everyParam!) || 0);
-		if (everyMs > 0) {
-			this._intervalTimeout = setInterval(() => this.randomizeColors(), everyMs);
-		}
-	}
-
+	/**
+	 * Called only as an effect of a change to `params_string`.
+	 */
 	syncFromUrl() {
-		const params = new URLSearchParams(window.location.search);
+		const params = new URLSearchParams(this.params_string ?? '');
 
 		const title: string | null = params.get("title");
 		if (title !== null) {
@@ -142,71 +119,110 @@ export class OnePageLandElement extends CustomaryElement implements OnePageOptio
 		this.fgcolor = params.get("fgcolor") ?? undefined;
 		this.bgcolor = params.get("bgcolor") ?? undefined;
 		this.size = params.get("size") ?? undefined;
+		this.page_style = params.get("style") ?? undefined;
+		this.line_class = params.get("class") ?? undefined;
 
-		const perLine: Record<number, string> = {};
+		const perLine: Record<number, {size?: string; fgcolor?: string; classes?: string[]}> = {};
 		for (const [key, value] of params) {
-			const match = key.match(/^size_(\d+)$/);
+			const match = key.match(/^(size|fgcolor|class)_(\d+)$/);
 			if (!match || !value) continue;
-			const n = parseFloat(value);
-			if (isFinite(n) && n > 0) perLine[parseInt(match[1], 10)] = `${n}dvw`;
+			const override = perLine[parseInt(match[2], 10)] ??= {};
+			if (match[1] === 'size') {
+				const n = parseFloat(value);
+				if (isFinite(n) && n > 0) override.size = `${n}dvw`;
+			} else if (match[1] === 'fgcolor') {
+				override.fgcolor = value;
+			} else {
+				override.classes = parse_class_tokens(value);
+			}
 		}
-		this.per_line_sizes = perLine;
+		this.per_line_overrides = perLine;
+	}
+
+	restart_randomizing() {
+		if (this._intervalTimeout) clearInterval(this._intervalTimeout);
+		this._intervalTimeout = undefined;
+
+		const everyMs = this.every === "" ? DEFAULT_EVERY : (parseInt(this.every ?? '') || 0);
+		if (everyMs > 0) {
+			this._intervalTimeout = setInterval(() => this.randomizeColors(), everyMs);
+		}
 	}
 
 	on_disconnected() {
 		if (this._intervalTimeout) clearInterval(this._intervalTimeout);
-		if (this._onKeydownEventListener) document.removeEventListener('keydown', this._onKeydownEventListener);
 	}
 
-	on_willUpdate() {
-		const divider_requested = this.divider && this.divider !== '0';
+	/**
+	 * The final title, `divider` applied: what a window title bar or a gallery caption shows.
+	 */
+	derive_derived_title() {
 		const divider_title =
-			divider_requested
+			this.divider && this.divider !== '0'
 				? (this.title || '').padEnd(40, '-')
 				: null;
 
-		document.title = divider_title || this.title || DEFAULT_TITLE;
+		return divider_title || this.title || DEFAULT_TITLE;
+	}
 
-		this.classInfo = {
+	derive_classInfo() {
+		return {
 			"dark": this.theme === "dark",
 			"light": this.theme === "light",
 		};
+	}
 
+	derive_styleInfo() {
 		const sizeNum = parseFloat(this.size ?? '');
 		const sizeCss = isFinite(sizeNum) && sizeNum > 0 ? `${sizeNum}dvw` : '';
 
-		this.styleInfo = {
+		return {
 			"background-color": this.bgcolor || this.randomBg,
 			...(this.fgcolor ? {"color": this.fgcolor} : {}),
 			...(sizeCss ? {"--page-text-font-size": sizeCss} : {}),
 		};
+	}
 
+	derive_text_lines() {
 		const lines = (this.text ?? '').split('\n');
-		const perLine = this.per_line_sizes ?? {};
-		this.text_lines = lines.map((lineText, i) => {
+		const perLine = this.per_line_overrides ?? {};
+		const base_classes = parse_class_tokens(this.line_class);
+		return lines.map((lineText, i) => {
 			const override = perLine[i + 1];
 			return {
 				text: lineText,
-				style: override ? `font-size: ${override}` : '',
+				styleInfo: {
+					...(override?.size ? {"font-size": override.size} : {}),
+					...(override?.fgcolor ? {"color": override.fgcolor} : {}),
+				},
+				classInfo: Object.fromEntries(
+					(override?.classes ?? base_classes).map(c => [c, true])
+				),
 			};
 		});
 	}
 
-	openOptions() {
-		if (this.options_placement === 'window') {
-			this.openOptionsWindow();
-		} else {
-			this.options_inlined_visible = 'true';
+	/* side effects outside the rendered tree, once the render settled */
+	on_updated(changedProperties: PropertyValues) {
+		this.apply_page_style();
+
+		/* announce the title, leaving to the host page what to make of it */
+		if (changedProperties.has('derived_title')) {
+			this.dispatchEvent(new CustomEvent('title_changed', {
+				detail: {title: this.derived_title},
+				bubbles: true,
+				composed: true,
+			}));
 		}
 	}
 
-	pullOptionsDialogBackInline() {
-		this.options_placement = 'inline';
-		this.options_inlined_visible = 'true';
-	}
-
-	openOptionsWindow() {
-		window.open('one-page-options/index.html' + window.location.search, 'one-page-options', 'popup,width=640,height=540');
+	apply_page_style() {
+		/* our own shadow root, never the document: the sheet is ours alone to adopt */
+		const root = this.shadowRoot;
+		if (!root) return;
+		if (this._pageStyleSheet === undefined) this._pageStyleSheet = adopt_page_style_sheet(root);
+		if (!this._pageStyleSheet) return;
+		fill_scoped_rules(this._pageStyleSheet, this.page_style ?? '');
 	}
 
 	randomizeColors() {
@@ -217,20 +233,55 @@ export class OnePageLandElement extends CustomaryElement implements OnePageOptio
 	isRandomEnabled() {
 		return this.random && (this.random !== '0');
 	}
-
-	isVanillaUrl() {
-		const params = new URLSearchParams(window.location.search);
-		const known = ['title', 'text', 'theme', 'random', 'every', 'divider', 'fgcolor', 'bgcolor', 'size'];
-		if (known.some(key => params.has(key))) return false;
-		for (const key of params.keys()) {
-			if (/^size_\d+$/.test(key)) return false;
-		}
-		return true;
-	}
 }
 
 function randomColor() {
 	return "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+}
+
+/*
+The `style` URL param never touches HTML: it becomes rules inside a constructed
+stylesheet, scoped so it can style the page text area only, never the Options Screen.
+*/
+function adopt_page_style_sheet(root: DocumentOrShadowRoot): CSSStyleSheet | null {
+	if (typeof CSSStyleSheet.prototype.replaceSync !== 'function') return null;
+	const sheet = new CSSStyleSheet();
+	sheet.replaceSync('@scope (#hypostasis) {}');
+	/* browser without @scope drops the rule: the `style` param stays quietly inert */
+	if (sheet.cssRules.length === 0) return null;
+	root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
+	return sheet;
+}
+
+function fill_scoped_rules(sheet: CSSStyleSheet, css: string) {
+	const scope = sheet.cssRules[0] as CSSGroupingRule;
+	while (scope.cssRules.length) scope.deleteRule(0);
+	if (!css) return;
+	const scratch = new CSSStyleSheet();
+	try {
+		scratch.replaceSync(css);
+	} catch {
+		return; /* invalid CSS: quietly ignore */
+	}
+	/*
+	Rule-by-rule CSSOM insertion, never `@scope { ${css} }` string-wrapping:
+	a `}` in the param value would close the block early and escape the scope.
+	insertRule parses exactly one canonically-serialized rule, so no breakout.
+	*/
+	for (const rule of Array.from(scratch.cssRules)) {
+		try {
+			scope.insertRule(rule.cssText, scope.cssRules.length);
+		} catch {
+			/* rule not insertable under @scope: quietly skip */
+		}
+	}
+}
+
+function parse_class_tokens(value: string | undefined): string[] {
+	return (value ?? '')
+		.split(',')
+		.map(s => s.trim())
+		.filter(s => /^-?[A-Za-z_][A-Za-z0-9_-]*$/.test(s));
 }
 
 Customary.declare(OnePageLandElement);

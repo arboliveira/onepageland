@@ -1,0 +1,40 @@
+# The curated One Page Land examples the Gallery puts on display.
+#
+# One example per line, this file being itself the curation, the one and only
+# place the list lives. Each is led by its `&`: displayed query strings start
+# with one so every param has one (see CONTRIBUTING). Edit this file to curate
+# the Gallery; no TypeScript needed.
+#
+# Blank lines are ignored. A line whose first non-blank character is `#` is a
+# comment, ignored too. A `#` anywhere else is part of the example, not a comment:
+# a query string is allowed to contain one.
+
+# One Random Land
+&title=One+Random+Land&text=One%0APage%0ALand&random=1&size=15
+
+# Theater Mode
+&theme=dark&title=Theater+Mode
+
+# worried already?
+&text=but+have+you+started+yet%3F&size=14&fgcolor=Olive&title=worried+already%3F
+
+# water does it
+&text=fix+it+with%0Awater&size=14&title=water+does+it&fgcolor=LightGray&size_2=28&fgcolor_2=DeepSkyBlue
+
+# BE YOURSELF
+&text=BE+YOURSELF%0ASURVEILLANCE+NEEDS+YOUR+BEHAVIOR%0ASO+AI+CAN+PREDICT+YOUR+ALIGNMENT&title=BE+YOURSELF&size=4&fgcolor=purple&size_1=12
+
+# Your Last Exit
+&text=YOUR+LAST+EXIT%0AMIGHT+NOT+BE%0ATHE+LAST&size=10&fgcolor=LightSeaGreen&title=YOUR+LAST+EXIT
+
+# Information Collapse
+&text=TOTAL+INFORMATION+COLLAPSE%0A👒🐶✌%EF%B8%8F☁%EF%B8%8F🦤🚢%0A%26+THE+END+OF+ALL+CONSENSUS+REALITY%0ATHE+DAMAGE+CANNOT+BE+UNDONE%0A+%0A%28apologies+to+Rory+Blank%21%29%0Ahttps%3A%2F%2Frawpaw.ink%2Fcollections%2Frory-blank%2Fproducts%2Finformation-collapse-natural-by-rory-blank&title=Information+Collapse&fgcolor=crimson&size=6&bgcolor=tan&style=.slanted%7Bfont-style%3Aitalic%7D+.apologies%7Bfont-size%3A0.8dvw%3Bcolor%3ALightYellow%7D&size_2=8&size_4=3&class_4=slanted&class_6=apologies&class_7=apologies
+
+# The Tiger
+&text=By%3A+Nael%2C+Grade+1%0A+%0AThe+Tiger%0A+%0AThe+tiger%0AHe+destroyed+his+cage%0AYes%0AYES%0AThe+tiger+is+out%0A+%0Ahttps%3A%2F%2F826dc.org%2Fstudent-writing%2Fthe-tiger%2F+%0AOriginally+published+in+%E2%80%9CThey%E2%80%99re+Singing+a+Song+in+Their+Rocket%E2%80%9D+%0Aand+%E2%80%9CYou+Will+Be+Able+to+Say+a+Thousand+Words%E2%80%9D%0Ahttps%3A%2F%2Fastoundingmagic.com%2Fproducts%2Fyou-will-be-able-to-say-a-thousand-words&size=3&bgcolor=Gold&title=The+Tiger&style=.footnote%7Bfont-size%3A0.6dvw%3Bcolor%3AGoldenRod%7D&size_1=1.2&size_2=4&size_3=6.5&size_10=10&class_11=footnote&class_12=footnote&class_13=footnote&class_14=footnote
+
+# Singularity
+&title=Singularity&text=👶᠁🧒᠁🧑᠁🧓᠁🤖&size=8
+
+# So it goes
+&text=👼%0A+%0AEVERYTHING%0AWAS%0ABEAUTIFUL%2C%0AAND%0ANOTHING%0AHURT%0A+%0A🪦%0A+%0Ahttps%3A%2F%2Fen.wikipedia.org%2Fwiki%2FSlaughterhouse-Five&size=4&title=So+it+goes&size_12=0.5&fgcolor_12=cyan

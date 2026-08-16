@@ -1,0 +1,32 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><link rel="icon" href="../favicon.svg" /><title>
+
+	Two One Page Land, side by side
+
+</title>
+
+	<style>
+		body { margin: 0; }
+	</style>
+</head>
+
+<body>
+	<!-- Two independent `one-page-land`, as a gallery would render them. -->
+	<one-page-land id="one"></one-page-land>
+	<one-page-land id="two"></one-page-land>
+
+<script type="importmap">{"imports": {
+	"#onepageland/": "../",
+	"#customary": "../_dependencies/customary/customary.mjs"
+}}</script>
+<script type="module">
+	import "./one-page-land.js";
+
+	/* the same class name on both, styled differently: neither sheet may reach the other */
+	document.getElementById('one').setAttribute('params_string',
+		'?text=One&class=tint&style=' + encodeURIComponent('.tint{color:rgb(0, 128, 0)}'));
+	document.getElementById('two').setAttribute('params_string',
+		'?text=Two&class=tint&style=' + encodeURIComponent('.tint{color:rgb(0, 0, 255)}'));
+</script>
+
+</body>
+</html>

@@ -7,15 +7,21 @@
 	<customary:if condition="{{text}}">
 		<div id="page-text">
 			<customary:for items="{{text_lines}}" value="line">
-				<span class="text-line" style="{[line.style]}">{[line.text]}</span>
+				<span class="text-line">{[line.text]}</span>
+				<customary:classMap
+						target=".text-line"
+						classInfo="{[line.classInfo]}"
+				>
+				</customary:classMap>
+				<customary:styleMap
+						target=".text-line"
+						styleInfo="{[line.styleInfo]}"
+				>
+				</customary:styleMap>
 			</customary:for>
 		</div>
 	</customary:if>
 </div>
-
-<customary:if condition="{{options_inlined_visible_bool}}">
-	<one-page-options></one-page-options>
-</customary:if>
 
 <customary:classMap
 		target="#hypostasis"

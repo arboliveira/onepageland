@@ -1,0 +1,28 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><link rel="icon" href="../favicon.svg" /><title>
+
+	One Page Land, on its own
+
+</title>
+
+	<style>
+		body { margin: 0; }
+	</style>
+</head>
+
+<body>
+	<!-- No `home-page` here: a page rendering `one-page-land` alone offers no Options Screen. -->
+	<one-page-land></one-page-land>
+
+<script type="importmap">{"imports": {
+	"#onepageland/": "../",
+	"#customary": "../_dependencies/customary/customary.mjs"
+}}</script>
+<script type="module">
+	import "./one-page-land.js";
+
+	/* `one-page-land` knows no `window`: this page owns one, so this page hands over the params */
+	document.querySelector('one-page-land').setAttribute('params_string', window.location.search);
+</script>
+
+</body>
+</html>

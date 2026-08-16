@@ -1,0 +1,33 @@
+<html lang="en"
+      xmlns:customary="https://customaryjs.github.io/schema"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="https://customaryjs.github.io/schema https://customaryjs.github.io/customary.xsd"
+>
+<div id="gallery">
+	<header id="gallery-header">
+		<h1>One Page Land Gallery</h1>
+		<button class="view-mode-btn" type="button" title="Switch between Hi-Def and Miniature">View Mode</button>
+	</header>
+
+	<div id="grid" class="{{grid_mode_class}}">
+		<customary:for items="{{previews}}" value="p" index="idx">
+			<figure class="preview">
+				<div class="window">
+					<div class="title-bar">
+						<span class="dots"><i></i><i></i><i></i></span>
+						<span class="title">{[p.title]}</span>
+					</div>
+					<div class="viewport">
+						<div class="canvas">
+							<one-page-land data-idx="{[idx]}" params_string="{[p.params]}"></one-page-land>
+						</div>
+					</div>
+				</div>
+				<figcaption>
+					<a class="params-btn" href="{[p.href]}" target="_blank" rel="noopener">{[p.display]}</a>
+				</figcaption>
+			</figure>
+		</customary:for>
+	</div>
+</div>
+</html>

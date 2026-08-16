@@ -20,7 +20,12 @@
 </head>
 
 <body>
-	<one-page-options></one-page-options>
+	<!--
+		Being the whole of a popped-out window is something only this page knows: it says
+		so, rather than leaving the element to probe `window.opener` for the answer.
+		Everywhere else the attribute is absent, and absent is what inline means.
+	-->
+	<one-page-options is_in_window="true"></one-page-options>
 
 <script type="importmap">{"imports": {
 	"#onepageland/": "../",
@@ -28,6 +33,10 @@
 }}</script>
 <script type="module">
 	import "./one-page-options.js";
+
+	/* being the page that owns this window, we are the one that gets to close it */
+	document.querySelector('one-page-options')
+		.addEventListener('close_me_please', () => window.close());
 </script>
 
 </body>

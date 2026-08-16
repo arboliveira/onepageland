@@ -1,0 +1,32 @@
+<html lang="en"
+      xmlns:customary="https://customaryjs.github.io/schema"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="https://customaryjs.github.io/schema https://customaryjs.github.io/customary.xsd"
+>
+<div class="line-options">
+	<label class="opt-name">Line <input class="line-options-n" type="number" min="1" data-customary-bind="line_number" /></label>
+	<fieldset class="opt-fieldset line-options-fieldset">
+		<div class="opt-row">
+			<label class="opt-name">Size (dvw)</label>
+			<div class="opt-control"><input type="text" data-customary-bind="line_size" placeholder="{{size_placeholder}}" /></div>
+			<div class="{{param_size_class}}">{{param_size_text}}</div>
+		</div>
+
+		<div class="opt-row">
+			<label class="opt-name">Text color</label>
+			<div class="opt-control"><input type="text" data-customary-bind="line_fgcolor" placeholder="{{fgcolor_placeholder}}" /></div>
+			<div class="{{param_fgcolor_class}}">{{param_fgcolor_text}}</div>
+		</div>
+
+		<div class="opt-row">
+			<label class="opt-name">Class</label>
+			<div class="opt-control"><input type="text" data-customary-bind="line_class" placeholder="{{class_placeholder}}" /></div>
+			<div class="{{param_class_class}}">{{param_class_text}}</div>
+		</div>
+
+		<div class="line-options-remove">
+			<button class="remove-line-options-btn" type="button" title="Remove line options">⊖</button>
+		</div>
+	</fieldset>
+</div>
+</html>
