@@ -2,6 +2,7 @@ import {Customary, CustomaryDeclaration, CustomaryElement} from "#customary";
 import {CustomaryHooks} from "#customary/CustomaryHooks.js";
 import {OnePageLandElement} from "#onepageland/one-page-land/one-page-land.js";
 import {OnePageOptionsElement} from "#onepageland/one-page-options/one-page-options.js";
+import {WEBSITE_ROOT_IMPORT_META} from "#onepageland/website-root.js";
 
 type Events = CustomaryHooks<HomePageElement>['events'];
 
@@ -42,8 +43,11 @@ export class HomePageElement extends CustomaryElement {
 			construct: {
 				shadowRootDont: true,
 			},
+			/* the website root ships no ico, so say so */
+			favicon: {detect: true, ico: {detect: false}},
 		},
 		hooks: {
+			website: {root: {import_meta: WEBSITE_ROOT_IMPORT_META}},
 			requires: [OnePageLandElement, OnePageOptionsElement],
 			externalLoader: {import_meta: import.meta, css_dont: true},
 			lifecycle: {

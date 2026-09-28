@@ -1,6 +1,7 @@
 import { Customary, CustomaryElement } from "#customary";
 import { OnePageLandElement } from "#onepageland/one-page-land/one-page-land.js";
 import { OnePageOptionsElement } from "#onepageland/one-page-options/one-page-options.js";
+import { WEBSITE_ROOT_IMPORT_META } from "#onepageland/website-root.js";
 /**
  * The Home Page is where access to the Options Screen lives.
  * Other pages can render `one-page-land` without offering the Options Screen.
@@ -18,8 +19,11 @@ export class HomePageElement extends CustomaryElement {
             construct: {
                 shadowRootDont: true,
             },
+            /* the website root ships no ico, so say so */
+            favicon: { detect: true, ico: { detect: false } },
         },
         hooks: {
+            website: { root: { import_meta: WEBSITE_ROOT_IMPORT_META } },
             requires: [OnePageLandElement, OnePageOptionsElement],
             externalLoader: { import_meta: import.meta, css_dont: true },
             lifecycle: {

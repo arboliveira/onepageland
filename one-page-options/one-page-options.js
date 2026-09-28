@@ -1,5 +1,6 @@
 import { Customary, CustomaryElement } from "#customary";
 import { OnePageOptionsFormElement } from "#onepageland/one-page-options/one-page-options-form.js";
+import { WEBSITE_ROOT_IMPORT_META } from "#onepageland/website-root.js";
 export class OnePageOptionsElement extends CustomaryElement {
     static customary = {
         name: 'one-page-options',
@@ -12,8 +13,11 @@ export class OnePageOptionsElement extends CustomaryElement {
             define: {
                 fontLocation: 'https://fonts.googleapis.com/css2?family=Averia+Serif+Libre:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap'
             },
+            /* the website root ships no ico, so say so */
+            favicon: { detect: true, ico: { detect: false } },
         },
         hooks: {
+            website: { root: { import_meta: WEBSITE_ROOT_IMPORT_META } },
             requires: [OnePageOptionsFormElement],
             externalLoader: { import_meta: import.meta },
             derive: {

@@ -127,7 +127,7 @@ function assert_not_applied(window: Window, document_before: Document) {
 /*
  * These suites carry state from one `it` to the next, so a run that skips the section
  * doing the capturing would compare against `undefined` and pass without meaning it.
- * `npm test -- --fgrep=…` does exactly that: it filters out the `interact` sections and
+ * `pnpm test -- --fgrep=…` does exactly that: it filters out the `interact` sections and
  * leaves the assertions standing on nothing. Say so rather than going quietly green.
  */
 function assert_captured(document_before: Document) {
@@ -296,7 +296,7 @@ describe(suite_enter.title, async function () {
      * action — so no amount of DOM-API driving reaches them from here.
      *
      * They are covered, for real, by `playwright/one-page-options-enter-test.ts`, which
-     * presses the keys through the browser. Run it with `npm run test:trusted-keys`.
+     * presses the keys through the browser. Run it with `pnpm run test:trusted-keys`.
      */
     describe('what needs trusted input, and so lives in the Playwright lane', async function () {
         it.skip('applies on plain Enter in a single-line field (behavior 1)', async function () {

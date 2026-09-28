@@ -2,6 +2,7 @@ import {Customary, CustomaryDeclaration, CustomaryElement} from "#customary";
 import {CustomaryHooks} from "#customary/CustomaryHooks.js";
 import {OnePageOptionsFormElement} from "#onepageland/one-page-options/one-page-options-form.js";
 import {OnePageOptionsResolved} from "#onepageland/one-page-options/one-page-options-resolve.js";
+import {WEBSITE_ROOT_IMPORT_META} from "#onepageland/website-root.js";
 
 type Events = CustomaryHooks<OnePageOptionsElement>['events'];
 
@@ -51,8 +52,11 @@ export class OnePageOptionsElement extends CustomaryElement {
 			define: {
 				fontLocation: 'https://fonts.googleapis.com/css2?family=Averia+Serif+Libre:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap'
 			},
+			/* the website root ships no ico, so say so */
+			favicon: {detect: true, ico: {detect: false}},
 		},
 		hooks: {
+			website: {root: {import_meta: WEBSITE_ROOT_IMPORT_META}},
 			requires: [OnePageOptionsFormElement],
 			externalLoader: {import_meta: import.meta},
 			derive: {
